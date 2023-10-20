@@ -14,7 +14,7 @@ import (
 
 	"aidanwoods.dev/go-paseto"
 	"github.com/badoux/checkmail"
-	"github.com/bursakerja/be_bursakerja/model"
+	"github.com/intern-monitoring/be_intermoni/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
