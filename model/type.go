@@ -14,8 +14,7 @@ type User struct {
 	Password        string         	   `bson:"password,omitempty" json:"password,omitempty"`
 	Confirmpassword string         	   `bson:"confirmpass,omitempty" json:"confirmpass,omitempty"`
 	Salt 			string			   `bson:"salt,omitempty" json:"salt,omitempty"`
-	Role     		string			   `bson:"role,omitempty" json:"role,omitempty" `
-
+	Role     		string			   `bson:"role,omitempty" json:"role,omitempty"`
 }
 
 type Lowongan struct {

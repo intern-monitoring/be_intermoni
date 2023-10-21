@@ -123,7 +123,7 @@ func DeleteDocsByID(_id primitive.ObjectID, db *mongo.Database, col string) erro
 	return nil
 }
 
-func SignUp(db *mongo.Database, col string, insertedDoc model.User) (insertedID primitive.ObjectID, err error) {
+func SignUpMahasiswa(db *mongo.Database, col string, insertedDoc model.User) (insertedID primitive.ObjectID, err error) {
 	if insertedDoc.FirstName == "" || insertedDoc.LastName == "" || insertedDoc.Email == "" || insertedDoc.Password == "" {
 		return insertedID, fmt.Errorf("mohon untuk melengkapi data")
 	} 
@@ -152,6 +152,40 @@ func SignUp(db *mongo.Database, col string, insertedDoc model.User) (insertedID 
 	insertedDoc.Password = hex.EncodeToString(hashedPassword)
 	insertedDoc.Salt = hex.EncodeToString(salt)
 	insertedDoc.Confirmpassword = ""
+	insertedDoc.Role = "mahasiswa"
+	return InsertOneDoc(db, col, insertedDoc)
+}
+
+func SignUpIndustri(db *mongo.Database, col string, insertedDoc model.User) (insertedID primitive.ObjectID, err error) {
+	if insertedDoc.FirstName == "" || insertedDoc.LastName == "" || insertedDoc.Email == "" || insertedDoc.Password == "" {
+		return insertedID, fmt.Errorf("mohon untuk melengkapi data")
+	} 
+	if err = checkmail.ValidateFormat(insertedDoc.Email); err != nil {
+		return insertedID, fmt.Errorf("email tidak valid")
+	} 
+	userExists, _ := GetUserFromEmail(insertedDoc.Email, db, col)
+	if insertedDoc.Email == userExists.Email {
+		return insertedID, fmt.Errorf("email sudah terdaftar")
+	} 
+	if insertedDoc.Confirmpassword != insertedDoc.Password {
+		return insertedID, fmt.Errorf("konfirmasi password salah")
+	}
+	if strings.Contains(insertedDoc.Password, " ") {
+		return insertedID, fmt.Errorf("password tidak boleh mengandung spasi")
+	}
+	if len(insertedDoc.Password) < 8 {
+		return insertedID, fmt.Errorf("password terlalu pendek")
+	}
+	salt := make([]byte, 16)
+	_, err = rand.Read(salt)
+	if err != nil {
+		return insertedID, fmt.Errorf("kesalahan server")
+	}
+	hashedPassword := argon2.IDKey([]byte(insertedDoc.Password), salt, 1, 64*1024, 4, 32)
+	insertedDoc.Password = hex.EncodeToString(hashedPassword)
+	insertedDoc.Salt = hex.EncodeToString(salt)
+	insertedDoc.Confirmpassword = ""
+	insertedDoc.Role = "industri"
 	return InsertOneDoc(db, col, insertedDoc)
 }
 
@@ -202,7 +236,7 @@ func GCFPostHandler(PASETOPRIVATEKEYENV, collectionname string, r *http.Request)
 	return GCFReturnStruct(Response)
 }
 
-func GCFPostHandlerSignUp(collectionname string, r *http.Request) string {
+func GCFPostHandlerSignUpMahasiswa(collectionname string, r *http.Request) string {
 	var Response model.Credential
 	Response.Status = false
 	var datauser model.User
@@ -211,7 +245,26 @@ func GCFPostHandlerSignUp(collectionname string, r *http.Request) string {
 		Response.Message = "error parsing application/json: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
-	_, err = SignUp(MongoConnect(), collectionname, datauser)
+	_, err = SignUpMahasiswa(MongoConnect(), collectionname, datauser)
+	if err != nil {
+		Response.Message = err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "Halo " + datauser.FirstName + " " + datauser.LastName
+	return GCFReturnStruct(Response)
+}
+
+func GCFPostHandlerSignUpIndustri(collectionname string, r *http.Request) string {
+	var Response model.Credential
+	Response.Status = false
+	var datauser model.User
+	err := json.NewDecoder(r.Body).Decode(&datauser)
+	if err != nil {
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	_, err = SignUpIndustri(MongoConnect(), collectionname, datauser)
 	if err != nil {
 		Response.Message = err.Error()
 		return GCFReturnStruct(Response)

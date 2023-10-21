@@ -85,14 +85,29 @@ func TestGetLowonganFromID(t *testing.T){
 	fmt.Println(doc)
 }
 
-func TestSignUp(t *testing.T) {
+func TestSignUpMahasiswa(t *testing.T) {
 	var doc model.User
 	doc.FirstName = "Dimas"
 	doc.LastName = "Ardianto"
 	doc.Email = "dimas@gmail.com"
 	doc.Password = "fghjkliow"
 	doc.Confirmpassword = "fghjkliow"
-	insertedID, err := module.SignUp(db, "user", doc)
+	insertedID, err := module.SignUpMahasiswa(db, "user", doc)
+	if err != nil {
+		t.Errorf("Error inserting document: %v", err)
+	} else {
+	fmt.Println("Data berhasil disimpan dengan id :", insertedID.Hex())
+	}
+}
+
+func TestSignUpIndustri(t *testing.T) {
+	var doc model.User
+	doc.FirstName = "Dimas"
+	doc.LastName = "Ardianto"
+	doc.Email = "dimas@gmail.com"
+	doc.Password = "fghjkliow"
+	doc.Confirmpassword = "fghjkliow"
+	insertedID, err := module.SignUpIndustri(db, "user", doc)
 	if err != nil {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
